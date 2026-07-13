@@ -1,19 +1,6 @@
 get_weather_forecast <- function(folder, location, output_file) {
-  # Fetch an Open-Meteo weather forecast for a location and upload it to S3
-  # openmeteo is GitHub-only; install here because FaaSr FunctionGitHubPackage
-  # currently builds an invalid withr::with_libpaths() call for R packages.
-  # remotes' bundled PAT can return HTTP 401; prefer a real token, else no auth
-  # (tpisel/openmeteo is public).
-  if (!requireNamespace("openmeteo", quietly = TRUE)) {
-    token <- Sys.getenv("GH_PAT", unset = "")
-    if (!nzchar(token)) token <- Sys.getenv("GITHUB_TOKEN", unset = "")
-    if (!nzchar(token)) token <- Sys.getenv("GITHUB_PAT", unset = "")
-    remotes::install_github(
-      "tpisel/openmeteo",
-      upgrade = "never",
-      auth_token = token
-    )
-  }
+  # Fetch an Open-Meteo weather forecast for a location and upload it to S3.
+  # openmeteo is installed via FunctionGitHubPackage (tpisel/openmeteo).
   library(openmeteo)
   library(tidyverse)
 
@@ -27,7 +14,6 @@ get_weather_forecast <- function(folder, location, output_file) {
       if (!any(is.na(nums))) {
         return(nums)
       }
-
     }
     loc
   }
