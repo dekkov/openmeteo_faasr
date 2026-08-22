@@ -105,10 +105,10 @@
     }
   },
   "FunctionGitRepo": {
-    "start_forecast": "FaaSr/openmeteo_faasr",
-    "get_weather_forecast": "FaaSr/openmeteo_faasr",
-    "combine_forecasts": "FaaSr/openmeteo_faasr",
-    "plot_forecasts": "FaaSr/openmeteo_faasr"
+    "start_forecast": "FaaSr/openmeteo_faasr/R",
+    "get_weather_forecast": "FaaSr/openmeteo_faasr/R",
+    "combine_forecasts": "FaaSr/openmeteo_faasr/R",
+    "plot_forecasts": "FaaSr/openmeteo_faasr/R"
   },
   "FunctionCRANPackage": {
     "get_weather_forecast": ["tidyverse"],

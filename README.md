@@ -98,7 +98,7 @@ Each fetch writes a CSV to S3. A later action combines those CSVs, and a final a
 
 ### 1. Start the Workflow
 
-The first function is a lightweight entry point that fans out to the parallel city fetches. The complete function can be found in [start_forecast.R](./start_forecast.R).
+The first function is a lightweight entry point that fans out to the parallel city fetches. The complete function can be found in [start_forecast.R](./R/start_forecast.R).
 
 ```r
 start_forecast <- function() {
@@ -111,7 +111,7 @@ start_forecast <- function() {
 
 ### 2. Get a City Forecast
 
-The second function fetches an Open-Meteo forecast for one location and uploads it to S3. The complete function can be found in [get_weather_forecast.R](./get_weather_forecast.R).
+The second function fetches an Open-Meteo forecast for one location and uploads it to S3. The complete function can be found in [get_weather_forecast.R](./R/get_weather_forecast.R).
 
 First, we load packages. `openmeteo` is installed by FaaSr from GitHub; `tidyverse` is installed from CRAN:
 
@@ -206,7 +206,7 @@ get_weather_forecast <- function(folder, location, output_file, use_archive = "F
 
 ### 3. Combine City Forecasts
 
-The third function downloads the per-city CSV files from S3 and binds them into one table. The complete function can be found in [combine_forecasts.R](./combine_forecasts.R).
+The third function downloads the per-city CSV files from S3 and binds them into one table. The complete function can be found in [combine_forecasts.R](./R/combine_forecasts.R).
 
 ```r
 combine_forecasts <- function(
@@ -271,7 +271,7 @@ combine_forecasts <- function(
 
 ### 4. Plot the Forecast Comparison
 
-The final function reads the combined CSV and creates a multi-panel comparison plot with `ggplot2` (via `tidyverse`). The complete function can be found in [plot_forecasts.R](./plot_forecasts.R).
+The final function reads the combined CSV and creates a multi-panel comparison plot with `ggplot2` (via `tidyverse`). The complete function can be found in [plot_forecasts.R](./R/plot_forecasts.R).
 
 At a high level, this function:
 
@@ -427,7 +427,7 @@ With the function created, configure it as follows:
 - **Function Name**: `start_forecast`
 - **Language**: `R`
 - **Compute Server**: `GH`
-- **Function's Git Repo/Path**: `FaaSr/openmeteo_faasr`
+- **Function's Git Repo/Path**: `FaaSr/openmeteo_faasr/R`
 - Leave **Function's Action Container** blank to use the default R container
 
 > ⚠️ Notice here that `start_forecast` is the *Function Name* (the R function FaaSr will run), while `Start` is the *Action ID* (the unique identifier FaaSr uses when orchestrating the workflow).
@@ -445,7 +445,7 @@ Create a new action called `GetCorvallis`:
   - `folder`: `OpenMeteoForecast`
   - `location`: `Corvallis`
   - `output_file`: `forecast_corvallis.csv`
-- **Function's Git Repo/Path**: `FaaSr/openmeteo_faasr`
+- **Function's Git Repo/Path**: `FaaSr/openmeteo_faasr/R`
 
 Because the function uses CRAN and GitHub packages, add:
 
@@ -476,7 +476,7 @@ Create a new action called `CombineForecasts`:
   - `input_loc2`: `forecast_new_york.csv`
   - `input_loc3`: `forecast_tokyo.csv`
   - `output_file`: `combined_forecasts.csv`
-- **Function's Git Repo/Path**: `FaaSr/openmeteo_faasr`
+- **Function's Git Repo/Path**: `FaaSr/openmeteo_faasr/R`
 - **R CRAN Packages**: `tidyverse`
 
 #### Plot Forecasts Function
@@ -490,7 +490,7 @@ Create a new action called `PlotForecasts`:
   - `folder`: `OpenMeteoForecast`
   - `input_file`: `combined_forecasts.csv`
   - `output_file`: `forecast_comparison.png`
-- **Function's Git Repo/Path**: `FaaSr/openmeteo_faasr`
+- **Function's Git Repo/Path**: `FaaSr/openmeteo_faasr/R`
 - **R CRAN Packages**: `tidyverse`
 
 ### 4. Connect our Functions
@@ -601,7 +601,7 @@ The DAG shape is the same as the main tutorial. The differences are:
 
 ### Updating our Function Code for Archiving
 
-The archive behavior is already built into [get_weather_forecast.R](./get_weather_forecast.R), [combine_forecasts.R](./combine_forecasts.R), and [plot_forecasts.R](./plot_forecasts.R) through the `use_archive` argument.
+The archive behavior is already built into [get_weather_forecast.R](./R/get_weather_forecast.R), [combine_forecasts.R](./R/combine_forecasts.R), and [plot_forecasts.R](./R/plot_forecasts.R) through the `use_archive` argument.
 
 When `use_archive` is `"TRUE"`, each function resolves the remote folder as:
 
