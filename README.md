@@ -70,7 +70,7 @@ This tutorial also includes a section on creating a workflow variant:
 
 ## Prerequisites
 
-This example function assumes you already completed the FaaSr tutorial ([https://faasr.io/FaaSr-Docs/tutorial/](https://faasr.io/FaaSr-Docs/tutorial/)) and have the necessary repositories and configuration set up. This tutorial will use the `FaaSr/openmeteo_faasr` repo as the function code source repository, but you may use your own repository as you follow along.
+This example function assumes you already completed the FaaSr tutorial ([https://faasr.io/FaaSr-Docs/tutorial/](https://faasr.io/FaaSr-Docs/tutorial/)) and have the necessary repositories and configuration set up. This tutorial will use the `dekkov/openmeteo_faasr` repo as the function code source repository, but you may use your own repository as you follow along.
 
 ## Understanding our Data
 
@@ -389,7 +389,7 @@ Now that we wrote our functions, we are ready to build our workflow using the Fa
 
 The final workflow file that we will create can be found in [OpenMeteoForecast.json](./OpenMeteoForecast.json). Before getting started, you can visualize this workflow by clicking **Upload** from the Workflow Builder and either uploading the file or importing from its GitHub URL:
 
-`https://github.com/FaaSr/openmeteo_faasr/blob/main/OpenMeteoForecast.json`
+`https://github.com/dekkov/openmeteo_faasr/blob/main/OpenMeteoForecast.json`
 
 > ℹ️ As you make changes to your workflow, you can click the **vertical layout** or **horizontal layout** controls at the top of the right-hand layout view to re-arrange the layout with your changes.  
 > ℹ️ Source for the Workflow Builder is at [https://github.com/FaaSr/FaaSr-workflow-builder](https://github.com/FaaSr/FaaSr-workflow-builder).
@@ -427,7 +427,7 @@ With the function created, configure it as follows:
 - **Function Name**: `start_forecast`
 - **Language**: `R`
 - **Compute Server**: `GH`
-- **Function's Git Repo/Path**: `FaaSr/openmeteo_faasr/R`
+- **Function's Git Repo/Path**: `dekkov/openmeteo_faasr/R`
 - Leave **Function's Action Container** blank to use the default R container
 
 > ⚠️ Notice here that `start_forecast` is the *Function Name* (the R function FaaSr will run), while `Start` is the *Action ID* (the unique identifier FaaSr uses when orchestrating the workflow).
@@ -445,7 +445,7 @@ Create a new action called `GetCorvallis`:
   - `folder`: `OpenMeteoForecast`
   - `location`: `Corvallis`
   - `output_file`: `forecast_corvallis.csv`
-- **Function's Git Repo/Path**: `FaaSr/openmeteo_faasr/R`
+- **Function's Git Repo/Path**: `dekkov/openmeteo_faasr/R`
 
 Because the function uses CRAN and GitHub packages, add:
 
@@ -476,7 +476,7 @@ Create a new action called `CombineForecasts`:
   - `input_loc2`: `forecast_new_york.csv`
   - `input_loc3`: `forecast_tokyo.csv`
   - `output_file`: `combined_forecasts.csv`
-- **Function's Git Repo/Path**: `FaaSr/openmeteo_faasr/R`
+- **Function's Git Repo/Path**: `dekkov/openmeteo_faasr/R`
 - **R CRAN Packages**: `tidyverse`
 
 #### Plot Forecasts Function
@@ -490,7 +490,7 @@ Create a new action called `PlotForecasts`:
   - `folder`: `OpenMeteoForecast`
   - `input_file`: `combined_forecasts.csv`
   - `output_file`: `forecast_comparison.png`
-- **Function's Git Repo/Path**: `FaaSr/openmeteo_faasr/R`
+- **Function's Git Repo/Path**: `dekkov/openmeteo_faasr/R`
 - **R CRAN Packages**: `tidyverse`
 
 ### 4. Connect our Functions
@@ -573,7 +573,7 @@ This section demonstrates how to turn the multi-city forecast board into a **wee
 
 The weekly archive workflow file can be found in [OpenMeteoForecastWeekly.json](./OpenMeteoForecastWeekly.json). You can visualize it by clicking **Upload** in the Workflow Builder and importing:
 
-`https://github.com/FaaSr/openmeteo_faasr/blob/main/OpenMeteoForecastWeekly.json`
+`https://github.com/dekkov/openmeteo_faasr/blob/main/OpenMeteoForecastWeekly.json`
 
 ```mermaid
 flowchart LR
