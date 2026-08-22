@@ -1,10 +1,19 @@
-get_weather_forecast <- function(folder, location, output_file) {
+get_weather_forecast <- function(folder, location, output_file, use_archive = "FALSE") {
   # Fetch an Open-Meteo weather forecast for a location and upload it to S3.
   # openmeteo is installed via FunctionGitHubPackage (tpisel/openmeteo).
   library(openmeteo)
   library(tidyverse)
 
-  # FaaSr passes arguments as strings. Accept either a place name ("tokyo")
+  # Optionally nest outputs under archive/YYYY-MM-DD so scheduled runs do not overwrite.
+  resolve_folder <- function(folder, use_archive) {
+    if (isTRUE(as.logical(use_archive))) {
+      paste0(folder, "/archive/", format(Sys.Date(), "%Y-%m-%d"))
+    } else {
+      folder
+    }
+  }
+
+  # FaaSr passes arguments as strings. Accept either a place name ("Tokyo")
   # or a "lat,lon" coordinate pair ("40.71,-74.01").
   parse_location <- function(loc) {
     loc <- trimws(loc)
@@ -18,6 +27,7 @@ get_weather_forecast <- function(folder, location, output_file) {
     loc
   }
 
+  remote_folder <- resolve_folder(folder, use_archive)
   location_label <- as.character(location)
   location_parsed <- parse_location(location)
 
@@ -30,11 +40,11 @@ get_weather_forecast <- function(folder, location, output_file) {
   local_file <- "weather_forecast.csv"
   write_csv(forecast, local_file)
 
-  faasr_put_file(local_file = local_file, remote_folder = folder, remote_file = output_file)
+  faasr_put_file(local_file = local_file, remote_folder = remote_folder, remote_file = output_file)
 
   log_msg <- paste0(
     "Function get_weather_forecast finished; forecast for '", location_label,
-    "' written to ", folder, "/", output_file, " in default S3 bucket"
+    "' written to ", remote_folder, "/", output_file, " in default S3 bucket"
   )
   faasr_log(log_msg)
 }
