@@ -11,14 +11,8 @@
   - [2. Get a City Forecast](#2-get-a-city-forecast)
   - [3. Combine City Forecasts](#3-combine-city-forecasts)
   - [4. Plot the Forecast Comparison](#4-plot-the-forecast-comparison)
-- [Building our Workflow](#building-our-workflow)
-  - [1. Set Up our Compute Server](#1-set-up-our-compute-server)
-  - [2. Set Up our Data Store](#2-set-up-our-data-store)
-  - [3. Add our Functions](#3-add-our-functions)
-  - [4. Connect our Functions](#4-connect-our-functions)
-  - [5. Finalize our Workflow Configuration](#5-finalize-our-workflow-configuration)
-- [Download and Invoke the Workflow](#download-and-invoke-the-workflow)
-  - [Download the Workflow](#download-the-workflow)
+- [Use the Completed Workflow](#use-the-completed-workflow)
+  - [Configure the Workflow](#configure-the-workflow)
   - [Register and Invoke the Workflow](#register-and-invoke-the-workflow)
   - [View the Output Data](#view-the-output-data)
 - [Create a Weekly Scheduled Forecast Archive](#create-a-weekly-scheduled-forecast-archive)
@@ -34,15 +28,14 @@
 - Writing R functions for FaaSr
 - Calling an external forecast API (Open-Meteo)
 - Invoking multiple functions in parallel
-- Duplicating functions in the Workflow Builder
 - Adding CRAN and GitHub R packages
-- Workflow Builder GUI
 - Combining multi-city outputs and creating a visualization
+- Registering a completed workflow configuration
 - Scheduling workflows weekly with `(FAASR SET TIMER)`
 
 ## Introduction
 
-The Open-Meteo Multi-City Forecast Workflow is an example of a common FaaSr use case in R: pull live weather forecasts for several cities, combine them, and produce a comparison visualization that is uploaded to S3. This tutorial is a walkthrough of creating your own workflow, from writing the code to viewing its outputs.
+The Open-Meteo Multi-City Forecast Workflow is an example of a common FaaSr use case in R: pull live weather forecasts for several cities, combine them, and produce a comparison visualization that is uploaded to S3. This tutorial explains the function code, provides a completed workflow configuration, and shows how to schedule weekly forecast archives.
 
 Unlike the [Weather Visualization](https://github.com/FaaSr/FaaSr-Functions/tree/main/WeatherVisualization) example (Python + historical NOAA station data), this workflow focuses on **live forecasts** from the [Open-Meteo](https://open-meteo.com/) API, multi-city parallel fetches, and an R/`tidyverse` analysis path.
 
@@ -383,156 +376,30 @@ plot_forecasts <- function(folder, input_file, output_file, use_archive = "FALSE
 }
 ```
 
-## Building our Workflow
+## Use the Completed Workflow
 
-Now that we wrote our functions, we are ready to build our workflow using the FaaSr Workflow Builder: [https://faasr.io/FaaSr-workflow-builder/](https://faasr.io/FaaSr-workflow-builder/).
+This tutorial provides a completed [OpenMeteoForecast.json](./OpenMeteoForecast.json) so we can focus on the Open-Meteo functions and scheduled archive rather than repeat the full Workflow Builder walkthrough.
 
-The final workflow file that we will create can be found in [OpenMeteoForecast.json](./OpenMeteoForecast.json). Before getting started, you can visualize this workflow by clicking **Upload** from the Workflow Builder and either uploading the file or importing from its GitHub URL:
+The workflow starts with one entry-point action, fetches three city forecasts in parallel, joins them at `CombineForecasts`, and finishes by creating a comparison plot. You can inspect or customize it by uploading the JSON file to the [FaaSr Workflow Builder](https://faasr.io/FaaSr-workflow-builder/) or importing it from:
 
 `https://github.com/dekkov/openmeteo_faasr/blob/main/OpenMeteoForecast.json`
 
-> ℹ️ As you make changes to your workflow, you can click the **vertical layout** or **horizontal layout** controls at the top of the right-hand layout view to re-arrange the layout with your changes.  
-> ℹ️ Source for the Workflow Builder is at [https://github.com/FaaSr/FaaSr-workflow-builder](https://github.com/FaaSr/FaaSr-workflow-builder).
+If you want to learn how to construct this type of workflow action by action, follow the [Weather Visualization tutorial](https://github.com/FaaSr/FaaSr-Functions/tree/main/WeatherVisualization#building-our-workflow). It covers configuring compute servers and data stores, adding and duplicating functions, connecting parallel actions, and selecting a workflow entry point.
 
-### 1. Set Up our Compute Server
+### Configure the Workflow
 
-After opening the Workflow Builder, first add a compute server. Click **Edit Compute Servers**, then following the FaaSr tutorial (see [Prerequisites](#prerequisites)), enter your GitHub username for **UserName**, `FaaSr-workflow` for **ActionRepoName**, and `main` for **Branch**.
+Download [OpenMeteoForecast.json](./OpenMeteoForecast.json), then replace `YOUR_USERNAME` under `ComputeServers.GH.UserName` with the GitHub username that owns your `FaaSr-workflow` repository.
 
-> ℹ️ This workflow uses GitHub Actions, but it is possible to bring your own compute server, like AWS Lambda. See the documentation for more details: [https://faasr.io/FaaSr-Docs/advanced/](https://faasr.io/FaaSr-Docs/advanced/).
+The provided configuration already includes:
 
-Your configuration should appear as below:
+- The `GH` GitHub Actions compute server
+- The `S3` MinIO data store used by the basic FaaSr tutorial
+- All five workflow actions and their invocation paths
+- The `tidyverse` CRAN dependency
+- The `tpisel/openmeteo` GitHub dependency
+- Function source paths under `dekkov/openmeteo_faasr/R`
 
-![Compute server screenshot](./assets/openmeteo-forecast-compute-server.png)
-
-### 2. Set Up our Data Store
-
-Click **Edit Data Stores**. Then, enter the endpoint, bucket, and region that was used in the tutorial (see [Prerequisites](#prerequisites)). For **Endpoint**, **Bucket**, and **Region** enter `https://play.min.io`, `faasr`, and `us-east-1`. Keep the data store name as the default `S3` so it matches the `S3_AccessKey` / `S3_SecretKey` secrets from the basic tutorial.
-
-> ℹ️ This workflow uses MinIO Play, but it is possible to bring your own S3 data store. See [https://faasr.io/FaaSr-Docs/workflows/#data-stores](https://faasr.io/FaaSr-Docs/workflows/#data-stores).
-
-Your data store configuration should appear as below:
-
-![Data store screenshot](./assets/openmeteo-forecast-data-store.png)
-
-### 3. Add our Functions
-
-#### Start Function
-
-Navigate back to **Edit Actions/Functions** and find the field labeled **Start typing to create a new action...**, then enter `Start` and press Enter.
-
-![Create a new action screenshot](./assets/openmeteo-forecast-add-function.png)
-
-With the function created, configure it as follows:
-
-- **Function Name**: `start_forecast`
-- **Language**: `R`
-- **Compute Server**: `GH`
-- **Function's Git Repo/Path**: `dekkov/openmeteo_faasr/R`
-- Leave **Function's Action Container** blank to use the default R container
-
-> ⚠️ Notice here that `start_forecast` is the *Function Name* (the R function FaaSr will run), while `Start` is the *Action ID* (the unique identifier FaaSr uses when orchestrating the workflow).
-
-#### Get City Forecast Functions
-
-Next we create three actions that all call the same R function, `get_weather_forecast`, with different location arguments.
-
-Create a new action called `GetCorvallis`:
-
-- **Function Name**: `get_weather_forecast`
-- **Language**: `R`
-- **Compute Server**: `GH`
-- **Arguments**:
-  - `folder`: `OpenMeteoForecast`
-  - `location`: `Corvallis`
-  - `output_file`: `forecast_corvallis.csv`
-- **Function's Git Repo/Path**: `dekkov/openmeteo_faasr/R`
-
-Because the function uses CRAN and GitHub packages, add:
-
-- Under **R CRAN Packages for the Function**: `tidyverse`
-- Under **R GitHub Packages for the Function**: `tpisel/openmeteo`
-
-With `GetCorvallis` created, simplify the next two cities using **Duplicate Action**:
-
-1. Duplicate as `GetNewYork`, then change:
-   - `location`: `New York`
-   - `output_file`: `forecast_new_york.csv`
-2. Duplicate as `GetTokyo`, then change:
-   - `location`: `Tokyo`
-   - `output_file`: `forecast_tokyo.csv`
-
-Everything else can remain the same, since FaaSr will run the same function with different arguments.
-
-#### Combine Forecasts Function
-
-Create a new action called `CombineForecasts`:
-
-- **Function Name**: `combine_forecasts`
-- **Language**: `R`
-- **Compute Server**: `GH`
-- **Arguments**:
-  - `folder`: `OpenMeteoForecast`
-  - `input_loc1`: `forecast_corvallis.csv`
-  - `input_loc2`: `forecast_new_york.csv`
-  - `input_loc3`: `forecast_tokyo.csv`
-  - `output_file`: `combined_forecasts.csv`
-- **Function's Git Repo/Path**: `dekkov/openmeteo_faasr/R`
-- **R CRAN Packages**: `tidyverse`
-
-#### Plot Forecasts Function
-
-Create a new action called `PlotForecasts`:
-
-- **Function Name**: `plot_forecasts`
-- **Language**: `R`
-- **Compute Server**: `GH`
-- **Arguments**:
-  - `folder`: `OpenMeteoForecast`
-  - `input_file`: `combined_forecasts.csv`
-  - `output_file`: `forecast_comparison.png`
-- **Function's Git Repo/Path**: `dekkov/openmeteo_faasr/R`
-- **R CRAN Packages**: `tidyverse`
-
-### 4. Connect our Functions
-
-Our workflow's functions are configured, so the next step is to define invocation paths.
-
-1. Select the `Start` action. Under **Next Actions to Invoke**, add:
-   - `GetCorvallis`
-   - `GetNewYork`
-   - `GetTokyo`
-2. For each of `GetCorvallis`, `GetNewYork`, and `GetTokyo`, add **Next Actions to Invoke**: `CombineForecasts`.
-3. For `CombineForecasts`, add **Next Actions to Invoke**: `PlotForecasts`.
-
-> ℹ️ Marking the same action (`CombineForecasts`) as the next invocation of multiple predecessors means it runs once after each of those predecessors completes.  
-> ℹ️ The InvokeNext popup also supports rank (parallel execution details) and conditional invocation. For more information, see [https://faasr.io/FaaSr-Docs/conditional/](https://faasr.io/FaaSr-Docs/conditional/).
-
-Your next invocations should appear as below:
-
-![Next actions to invoke screenshot](./assets/openmeteo-forecast-invoke-next.png)
-
-### 5. Finalize our Workflow Configuration
-
-Click **Workflow Settings**, then for **Workflow Name** enter `OpenMeteoForecast` and for **Entry Point** select `Start`. Leave the remaining configuration as default.
-
-> ℹ️ **Entry Point** is the first action invoked in the workflow.  
-> ℹ️ Refer to the documentation for other configuration options: [https://faasr.io/FaaSr-Docs/workflows/#workflow-settings](https://faasr.io/FaaSr-Docs/workflows/#workflow-settings).
-
-Your workflow settings should appear as below:
-
-![Workflow settings screenshot](./assets/openmeteo-forecast-settings.png)
-
-## Download and Invoke the Workflow
-
-With our workflow complete, click the **vertical layout** control at the top of the right-hand layout view to review the graph. You should see `Start` fan out to the three city fetches, then join at `CombineForecasts`, then finish at `PlotForecasts`.
-
-![Workflow layout screenshot](./assets/openmeteo-forecast-layout.png)
-
-### Download the Workflow
-
-Click **Download** and download `OpenMeteoForecast.json`.
-
-> ℹ️ If you prefer to start from the file already in this repository, you can download [OpenMeteoForecast.json](./OpenMeteoForecast.json) directly. Before register/invoke, open it (or re-import it in the Workflow Builder) and replace `YOUR_USERNAME` with your GitHub username under `ComputeServers.GH.UserName`.
+If your compute repository, branch, or S3 configuration differs from the basic tutorial, update the corresponding values before registering the workflow.
 
 ### Register and Invoke the Workflow
 
