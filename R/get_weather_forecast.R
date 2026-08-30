@@ -1,6 +1,21 @@
 get_weather_forecast <- function(folder, location, output_file, use_archive = "FALSE") {
   # Fetch an Open-Meteo weather forecast for a location and upload it to S3.
-  # openmeteo is installed via FunctionGitHubPackage (tpisel/openmeteo).
+  if (!requireNamespace("openmeteo", quietly = TRUE)) {
+    auth_token <- Sys.getenv("GH_PAT")
+    if (!nzchar(auth_token)) {
+      auth_token <- Sys.getenv("GITHUB_TOKEN")
+    }
+    if (!nzchar(auth_token)) {
+      auth_token <- Sys.getenv("GITHUB_PAT")
+    }
+
+    remotes::install_github(
+      "tpisel/openmeteo",
+      auth_token = auth_token,
+      upgrade = "never"
+    )
+  }
+
   library(openmeteo)
   library(tidyverse)
 
