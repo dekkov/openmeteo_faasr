@@ -17,7 +17,7 @@
   - [View the Output Data](#view-the-output-data)
 - [Create a Weekly Scheduled Forecast Archive](#create-a-weekly-scheduled-forecast-archive)
   - [Updating our Function Code for Archiving](#updating-our-function-code-for-archiving)
-  - [Updating our Workflow for Archiving](#updating-our-workflow-for-archiving)
+  - [Configure the Weekly Workflow](#configure-the-weekly-workflow)
   - [Register the Weekly Workflow](#register-the-weekly-workflow)
   - [Setting a Weekly Timer with FaaSr-workflow](#setting-a-weekly-timer-with-faasr-workflow)
   - [Verify Scheduled Runs and Archive Outputs](#verify-scheduled-runs-and-archive-outputs)
@@ -491,17 +491,15 @@ resolve_folder <- function(folder, use_archive) {
 
 > ℹ️ All actions in a single run should use the same `use_archive` value so they read and write the same dated folder.
 
-### Updating our Workflow for Archiving
+### Configure the Weekly Workflow
 
-Start from [OpenMeteoForecast.json](./OpenMeteoForecast.json) in the Workflow Builder (or upload [OpenMeteoForecastWeekly.json](./OpenMeteoForecastWeekly.json) directly), then:
+Download [OpenMeteoForecastWeekly.json](./OpenMeteoForecastWeekly.json) and open it in a text editor. Under `ComputeServers.GH`, replace `YOUR_USERNAME` with the GitHub username that owns your `FaaSr-workflow` repository:
 
-1. Click **Workflow Settings** and set **Workflow Name** to `OpenMeteoForecastWeekly`. Keep **Entry Point** as `Start`.
-2. For each of `GetCorvallis`, `GetNewYork`, `GetTokyo`, `CombineForecasts`, and `PlotForecasts`, add (or set) the argument:
-   - `use_archive`: `TRUE`
-3. Leave city locations, file names, packages, and InvokeNext connections unchanged.
-4. Click **Download** and save `OpenMeteoForecastWeekly.json`.
-5. Replace `YOUR_USERNAME` with your GitHub username under `ComputeServers.GH.UserName`.
-6. Upload `OpenMeteoForecastWeekly.json` to your **FaaSr-workflow** repository.
+```json
+"UserName": "YOUR_GITHUB_USERNAME"
+```
+
+Save the updated file, then upload `OpenMeteoForecastWeekly.json` to the root of your **FaaSr-workflow** repository. You must make this change before registering the workflow so FaaSr creates the generated actions in the correct GitHub repository.
 
 ### Register the Weekly Workflow
 
