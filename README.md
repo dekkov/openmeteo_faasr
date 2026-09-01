@@ -57,6 +57,10 @@ flowchart LR
   02 --> 03
 ```
 
+Below is an example of the forecast comparison produced by the workflow:
+
+![Open-Meteo multi-city forecast comparison](./assets/openmeteo-forecast-comparison.png)
+
 This tutorial also includes a section on creating a workflow variant:
 
 - **Weekly Scheduled Forecast Archive** (see [Create a Weekly Scheduled Forecast Archive](#create-a-weekly-scheduled-forecast-archive)): Demonstrates how to write each run under a date-stamped S3 prefix and invoke the workflow every week using `(FAASR SET TIMER)` in your `FaaSr-workflow` repository.
@@ -260,7 +264,7 @@ combine_forecasts <- function(
 }
 ```
 
-> ℹ️ `CombineForecasts` is invoked by each of the three city actions. FaaSr waits until all predecessors finish before running it once — the same barrier pattern used by `PlotData` in the Weather Visualization example.
+> ℹ️ Each city action triggers a `CombineForecasts` GitHub Actions run. FaaSr uses its synchronization state to select one of those runs to execute `combine_forecasts` after all predecessors finish. The other runs exit without executing the R function, although GitHub still marks those synchronization no-ops as successful. This is the same barrier pattern used by `PlotData` in the Weather Visualization example.
 
 ### 4. Plot the Forecast Comparison
 
@@ -389,6 +393,8 @@ This tutorial provides a completed [OpenMeteoForecast.json](./OpenMeteoForecast.
 The workflow starts with one entry-point action, fetches three city forecasts in parallel, joins them at `CombineForecasts`, and finishes by creating a comparison plot. You can inspect or customize it by uploading the JSON file to the [FaaSr Workflow Builder](https://faasr.io/FaaSr-workflow-builder/) or importing it from:
 
 `https://github.com/dekkov/openmeteo_faasr/blob/main/OpenMeteoForecast.json`
+
+![Open-Meteo workflow in the FaaSr Workflow Builder](./assets/openmeteo-workflow-layout.png)
 
 If you want to learn how to construct this type of workflow action by action, follow the [Weather Visualization tutorial](https://github.com/FaaSr/FaaSr-Functions/tree/main/WeatherVisualization#building-our-workflow). It covers configuring compute servers and data stores, adding and duplicating functions, connecting parallel actions, and selecting a workflow entry point.
 
@@ -560,9 +566,15 @@ After a successful set-timer run, your `FaaSr-workflow` repository should contai
 
 You should also see a workflow named similar to **(OpenMeteoForecastWeekly TIMER)** in the Actions list. That wrapper supports both the weekly schedule and manual `workflow_dispatch` runs.
 
+![OpenMeteoForecastWeekly timer in the GitHub Actions list](./assets/openmeteo-weekly-timer.png)
+
 ### Verify Scheduled Runs and Archive Outputs
 
 After the timer fires (or after a manual run of the TIMER wrapper / `(FAASR INVOKE)`):
+
+![Successful OpenMeteoForecastWeekly action runs](./assets/openmeteo-weekly-successful-runs.png)
+
+Multiple successful `CombineForecasts` entries are expected in the Actions list. Only the synchronization winner executes the R function and invokes `PlotForecasts`; the other entries exit successfully without processing the data.
 
 1. In **Actions**, confirm `OpenMeteoForecastWeekly-*` jobs completed successfully.
 2. In your S3 bucket, confirm a dated archive folder was created, for example:
@@ -579,6 +591,8 @@ faasr/
             ├── combined_forecasts.csv
             └── forecast_comparison.png
 ```
+
+![OpenMeteo forecast files in a dated MinIO bucket folder](./assets/openmeteo-weekly-archive-outputs.png)
 
 Each subsequent Monday should add a new `YYYY-MM-DD` folder under `OpenMeteoForecast/archive/`.
 
