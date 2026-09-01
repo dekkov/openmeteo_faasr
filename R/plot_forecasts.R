@@ -29,8 +29,14 @@ plot_forecasts <- function(folder, input_file, output_file, use_archive = "FALSE
     stop("Combined forecast is missing a 'location' column")
   }
 
-  temp_max_col <- intersect(c("temperature_2m_max", "temp_max"), names(forecast))
-  precip_col <- intersect(c("precipitation_sum", "precipitation"), names(forecast))
+  temp_max_col <- intersect(
+    c("daily_temperature_2m_max", "temperature_2m_max", "temp_max"),
+    names(forecast)
+  )
+  precip_col <- intersect(
+    c("daily_precipitation_sum", "precipitation_sum", "precipitation"),
+    names(forecast)
+  )
 
   if (length(temp_max_col) == 0) {
     stop("Combined forecast is missing a daily maximum temperature column")
